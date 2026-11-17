@@ -1260,12 +1260,15 @@ function scratch(d,vel){ if(!AC) return; if(!djNoise){ djNoise=AC.createBuffer(1
 function faderSnd(){ if(!AC) return; const t=AC.currentTime, o=AC.createOscillator(), g=AC.createGain(); o.type='square'; o.frequency.setValueAtTime(1200,t); o.frequency.exponentialRampToValueAtTime(700,t+0.06);
   g.gain.setValueAtTime(0.05,t); g.gain.exponentialRampToValueAtTime(0.0001,t+0.08); o.connect(g); g.connect(musBus()); o.start(t); o.stop(t+0.1); }
 function djNow(){ return AC?AC.currentTime-DJ.t0:performance.now()/1000-DJ.t0; }
-function djWin(){ return (1+(S.djSkill||0)*0.12)*[1,1.1,1.15,0.9,0.75][S.buzz||0]; }
+function djWin(){ return (1+(S.djSkill||0)*0.12)*[1,1.1,1.15,0.9,0.75][S.buzz||0]*(DJ.tw||1); }
+function djTier(){ const p=S.djPlays||0; return p>=14?4:p>=9?3:p>=5?2:p>=2?1:0; }
+const DJ_TIER=[{n:'Domówka',bpm:96,notes:22,hard:0,win:1,pay:1},{n:'Osiedlowa impreza',bpm:102,notes:26,hard:0.08,win:0.93,pay:1.2},{n:'Klub',bpm:110,notes:30,hard:0.16,win:0.86,pay:1.45},{n:'Duży klub',bpm:118,notes:34,hard:0.24,win:0.8,pay:1.75},{n:'Festiwal',bpm:126,notes:40,hard:0.32,win:0.74,pay:2.1}];
 function djStart(title,cb){ useEnergy(title.indexOf('Trasa')===0?22:12); drumVol=1;
   DJ.open=true; DJ.ended=false; DJ.cb=cb; DJ.perfect=DJ.good=DJ.miss=DJ.combo=DJ.maxc=0; $('djT').textContent=title; $('dj').style.display='flex'; $('djRes').style.display='none';
-  const beat=60/96; DJ.beat=beat; DJ.notes=[]; let b=3; const hard=title.indexOf('Trasa')===0?0.35:title.indexOf('Lekcja')===0?0.1:0.22;
-  while(DJ.notes.length<22){ let ty=DJ.notes.length<4?(DJ.notes.length%2?'R':'L'):pick(['L','R','L','R','F']);
-    if(ty!=='F'&&Math.random()<0.35){ DJ.notes.push({ty:'L',t:b*beat,st:0}); DJ.notes.push({ty:'R',t:(b+0.5)*beat,st:0,baby:1}); b+=1.5; continue; }
+  const lesson=title.indexOf('Lekcja')===0, dt_=lesson?0:djTier(), DT=DJ_TIER[dt_]; DJ.tier=dt_; DJ.tw=DT.win; DJ.pay=DT.pay; $('djT').textContent=title+(lesson?'':' · '+DT.n);
+  const beat=60/DT.bpm; DJ.beat=beat; DJ.notes=[]; let b=3; const hard=(title.indexOf('Trasa')===0?0.35:lesson?0.1:0.22)+DT.hard;
+  while(DJ.notes.length<DT.notes){ let ty=DJ.notes.length<4?(DJ.notes.length%2?'R':'L'):pick(['L','R','L','R','F']);
+    if(ty!=='F'&&Math.random()<0.35+DJ.tier*0.05){ DJ.notes.push({ty:'L',t:b*beat,st:0}); DJ.notes.push({ty:'R',t:(b+0.5)*beat,st:0,baby:1}); b+=1.5; continue; }
     DJ.notes.push({ty,t:b*beat,st:0}); b+=Math.random()<hard?0.5:1; }
   DJ.len=b*beat+1.2; const box=$('djNotes'); box.innerHTML='';
   DJ.notes.forEach(n=>{ const el=document.createElement('div'); el.className='dn '+n.ty; el.textContent=n.ty==='L'?'◀':n.ty==='R'?'▶':'✦'; box.appendChild(el); n.el=el; });
@@ -1282,7 +1285,8 @@ function djPress(d,vel){ if(!DJ.open||DJ.ended) return; DJ.spin=d*20; scratch(d,
 function djFader(){ if(!DJ.open||DJ.ended) return; faderSnd(); const b=$('djF'); b.classList.add('on'); setTimeout(()=>b.classList.remove('on'),90); djJudge('F'); }
 function djEnd(){ if(!DJ.open||DJ.ended) return; DJ.ended=true; const tot=Math.max(1,DJ.perfect+DJ.good+DJ.miss), acc=(DJ.perfect+DJ.good*0.6)/tot, hits=Math.round(acc*10);
   $('djRes').innerHTML='<b>'+(acc>=0.8?'Mistrzowski set':acc>=0.6?'Dobry set':acc>=0.4?'Może być':'Płyta przeskoczyła')+'</b><br>Celność '+Math.round(acc*100)+'% · combo '+DJ.maxc+' · czyste '+DJ.perfect; $('djRes').style.display='block';
-  setTimeout(()=>{ DJ.open=false; $('dj').style.display='none'; if(DJ.cb) DJ.cb(0.4+acc*1.2,hits); },1700); }
+  setTimeout(()=>{ DJ.open=false; $('dj').style.display='none'; const tb=djTier(); S.djPlays=(S.djPlays||0)+1; const ta=djTier(); if(ta>tb) setTimeout(()=>gg('grucha','Ludzie gadają o twoich setach. Dostajesz teraz granie na poziomie: '+DJ_TIER[ta].n+'. Szybsze kawałki, więcej skreczy, lepsza stawka.'),3000);
+    if(DJ.cb) DJ.cb((0.4+acc*1.2)*(DJ.pay||1),hits); },1700); }
 function updateDJ(dt){ if(!DJ.open) return; const now=djNow(), w=djWin();
   DJ.rot+=dt*(3.3+DJ.spin); DJ.spin*=0.86; $('vinyl').style.transform='rotate('+DJ.rot+'rad)';
   if(!DJ.ended){ DJ.notes.forEach(n=>{ if(n.st) return; const x=14+(n.t-now)/1.8*86; if(x>104){ n.el.style.display='none'; return; } n.el.style.display='block'; n.el.style.transform='translateX(-50%)'; n.el.style.left=x+'%';
@@ -1835,6 +1839,9 @@ const RIVAL_BARS=['Ty i rap? To jak maluch na autostradzie: wszyscy cię wyprzed
   'Mikrofon w twoich rękach jak kierownica u babci: niby trzymasz, a i tak lądujesz w rowie, braciszku.',
   'Ja tu nawijałem, gdy ty jadłeś kaszkę, wracaj do mamy, niech ci zrobi nową czapkę.'];
 const RIVALS=['MC Szczur','Gruby Benek','Młody Kwas','Rymek z Zatorza'];
+const LIGA=[{n:'Ławka',r:['Młody Kwas','Rymek z Zatorza']},{n:'Osiedle',r:['MC Szczur','Gruby Benek']},{n:'Dzielnica',r:['Zimny Łokieć','Szeryf z Bałut','Kaszel z Pragi']},{n:'Miasto',r:['Profesor Flow','Dziki Wers','Siostra Rym']},{n:'Mistrzostwa',r:['Bestia z Ursusa','Czarny Notes','Król Nocnych']}];
+const FS_TIER=[{bpm:92,seg:4,npr:6,dbl:0,win:1,need:0.7,pay:1},{bpm:98,seg:4,npr:6,dbl:0.1,win:0.92,need:0.72,pay:1.5},{bpm:106,seg:5,npr:7,dbl:0.2,win:0.85,need:0.75,pay:2.2},{bpm:114,seg:5,npr:8,dbl:0.3,win:0.78,need:0.78,pay:3},{bpm:122,seg:6,npr:8,dbl:0.4,win:0.72,need:0.8,pay:4}];
+function fsTier(ctx){ if(ctx==='dres') return 0; if(ctx==='studio') return Math.min(4,Math.floor((S.tracks||0)/3)); if(ctx==='dance') return Math.min(3,Math.floor((S.fans||0)/1500)); const w=S.battlesWon||0; return w>=11?4:w>=7?3:w>=4?2:w>=2?1:0; }
 const B={hits:0};
 const rivalG=guy({top:0x6a2a2a,pants:0x22222a,cap:0xc83a3a,s:1.05,baggy:1.2}); rivalG.visible=false; rivalG.userData.noIdle=true;
 const FS={on:false};
@@ -1868,10 +1875,11 @@ function bass(f,t,d){ if(!AC) return; const o=AC.createOscillator(), g=AC.create
   g.gain.setValueAtTime(0.0001,t); g.gain.linearRampToValueAtTime(0.13,t+0.02); g.gain.exponentialRampToValueAtTime(0.001,t+d); o.connect(lp); lp.connect(g); g.connect(musBus()); o.start(t); o.stop(t+d+0.05); }
 function keys2(f,t){ if(!AC) return; [1,1.19,1.5].forEach(m=>{ const o=AC.createOscillator(), g=AC.createGain(); o.type='triangle'; o.frequency.value=f*4*m; g.gain.setValueAtTime(0.0001,t); g.gain.linearRampToValueAtTime(0.025,t+0.05); g.gain.exponentialRampToValueAtTime(0.001,t+1.2); o.connect(g); g.connect(musBus()); o.start(t); o.stop(t+1.3); }); }
 function fsNow(){ return AC? AC.currentTime-FS.t0 : performance.now()/1000-FS.t0; }
-function fsWin(){ return [1,1.15,1.25,0.9,0.72][S.buzz]*(FS.insp||1); }
+function fsWin(){ return [1,1.15,1.25,0.9,0.72][S.buzz]*(FS.insp||1)*(FS.tw||1); }
 function battle(ctx){
   useEnergy(8); drumVol=1; B.ctx=ctx||'kosa'; battleOpen=true; const solo=B.ctx==='studio'||B.ctx==='dance'; FS.solo=solo; FS.insp=S.insp?1.15:1; S.insp=0;
-  B.rival=solo?(B.ctx==='studio'?'Nagrywanie u Gruchy':'Parkiet w Piwnicy'):B.ctx==='dres'?'Dres z Zatorza':pick(RIVALS);
+  const tier=fsTier(B.ctx), TT=FS_TIER[tier]; FS.tier=tier; FS.tw=TT.win; FS.need=TT.need; B.tier=tier;
+  B.rival=solo?(B.ctx==='studio'?(tier>=3?'Trudny numer u Gruchy':'Nagrywanie u Gruchy'):'Parkiet w Piwnicy'):B.ctx==='dres'?'Dres z Zatorza':pick(LIGA[tier].r);
   const P=player.position; let R;
   if(solo) R=null;
   else if(B.ctx==='dres') R=dresy[0];
@@ -1880,21 +1888,21 @@ function battle(ctx){
   FS.R=R; if(R){ R.rotation.y=Math.atan2(P.x-R.position.x,P.z-R.position.z); talkTarget={pos:R.position,h:2.2}; }
   else { const fx=Math.sin(player.rotation.y), fz=Math.cos(player.rotation.y); talkTarget={pos:new W.Vector3(P.x+fx*2.2,0,P.z+fz*2.2),h:1.5}; }
   document.body.classList.add('cine');
-  const beat=60/92; FS.beat=beat; FS.notes=[]; FS.rseg=[]; FS.pseg=[];
+  const beat=60/TT.bpm; FS.beat=beat; FS.notes=[]; FS.rseg=[]; FS.pseg=[];
   let b=3;
-  for(let r=0;r<4;r++){
+  for(let r=0;r<TT.seg;r++){
     if(!solo){ FS.rseg.push({t:b*beat,end:(b+3)*beat,w:pick(RIVAL_BARS).split(' ')}); b+=3; } else b+=2;
-    const seg={t:b*beat,end:(b+6)*beat,w:pick(BARS).split(' '),ids:[],out:[]}; let last=-1;
-    for(let k=0;k<6;k++){ const tt=(b+k)*beat; let lane=rnd(0,3); if(lane===last) lane=(lane+rnd(1,3))%4; last=lane;
+    const seg={t:b*beat,end:(b+TT.npr)*beat,w:pick(BARS).split(' '),ids:[],out:[]}; let last=-1;
+    for(let k=0;k<TT.npr;k++){ const tt=(b+k)*beat; let lane=rnd(0,3); if(lane===last) lane=(lane+rnd(1,3))%4; last=lane;
       seg.ids.push(FS.notes.length); FS.notes.push({lane,t:tt,seg:r,st:0,gold:Math.random()<0.15});
-      if(Math.random()<0.3+r*0.08&&k<5){ const l2=(lane+rnd(1,3))%4; seg.ids.push(FS.notes.length); FS.notes.push({lane:l2,t:tt+beat/2,seg:r,st:0}); } }
-    FS.pseg.push(seg); b+=6; }
+      if(Math.random()<0.3+r*0.08+TT.dbl&&k<TT.npr-1){ const l2=(lane+rnd(1,3))%4; seg.ids.push(FS.notes.length); FS.notes.push({lane:l2,t:tt+beat/2,seg:r,st:0}); } }
+    FS.pseg.push(seg); b+=TT.npr; }
   FS.len=(b+1)*beat; FS.perfect=0; FS.good=0; FS.miss=0; FS.combo=0; FS.maxCombo=0; FS.ended=false; FS.gest=0; FS.hype=S.zq===4?65:50; FS.gold=0; FS.fire=0; $('fs').classList.remove('res');
   $('fsRes').style.display='none'; $('fs').classList.remove('onfire'); placeCrowd(!solo&&!INT.cur&&OPT.crowd); FS.laneH=0;
   document.querySelectorAll('#lanes .note').forEach(n=>n.remove());
   const lanes=document.querySelectorAll('#lanes .lane');
   FS.notes.forEach(n=>{ const el=document.createElement('div'); el.className='note'+(n.gold?' gold':''); el.style.transform='translateY(-999px)'; n.vis=false; lanes[n.lane].appendChild(el); n.el=el; });
-  $('fsRival').textContent=solo?B.rival:'Ty vs '+B.rival; $('fsStat').textContent='Celność 100% · combo 0'; $('bubP').style.display='none'; $('bubR').style.display='none';
+  $('fsRival').textContent=(solo?B.rival:'Ty vs '+B.rival)+(B.ctx==='dres'?'':' · '+(B.ctx==='studio'?'poziom '+(tier+1):B.ctx==='dance'?'poziom '+(tier+1):'liga: '+LIGA[tier].n)); $('fsStat').textContent='Celność 100% · combo 0'; $('bubP').style.display='none'; $('bubR').style.display='none';
   $('fs').style.display='block'; FS.on=true; perfFS(true);
   FS.t0=AC?AC.currentTime+0.4:performance.now()/1000+0.4;
   if(AC){ const T0=FS.t0, nb=Math.ceil(FS.len/beat), roots=[55,55,43.65,49];
@@ -1940,10 +1948,10 @@ function updateFS(dt,now){
   FS.cf=(FS.cf||0)+1; if(FS.cf%2) crowdG.forEach((g,i)=>{ if(!g.visible) return; const u=g.userData; const ph=t/FS.beat*Math.PI+i; const h=FS.hype/100; u.body.position.y=Math.abs(Math.sin(ph))*0.12*h; u.arms.forEach((a,k)=>{ a.rotation.x=h>0.7||FS.fire>0?-2.5+Math.sin(ph+k)*0.4:h>0.4?-0.9+Math.sin(ph)*0.3:-0.15; }); u.elbows.forEach(e=>e.rotation.x=h>0.4?-0.6:-0.2); });
   if(FS.fire>0) FS.fire-=dt;
   if(t>FS.len&&!FS.ended){ FS.ended=true; const tot=Math.max(1,FS.perfect+FS.good+FS.miss), acc=(FS.perfect+FS.good*0.6)/tot;
-    B.acc=Math.round(acc*100); B.combo=FS.maxCombo; B.hits=acc>=0.7?3:acc>=0.45?2:1;
+    B.acc=Math.round(acc*100); B.combo=FS.maxCombo; const nd=FS.need||0.7; B.hits=acc>=nd?3:acc>=nd-0.25?2:1;
     let best=null; FS.pseg.forEach(sg=>{ const v=(sg.sc||0)/Math.max(1,sg.n||1); if(!best||v>best.v) best={v,line:sg.w.join(' ')}; }); B.best=best&&best.v>0.3?best.line:null; B.hype=Math.round(FS.hype);
-    const ttl=B.ctx==='studio'?(acc>=0.7?'Złoty take':acc>=0.45?'Może być':'Do kosza'):B.ctx==='dance'?(acc>=0.7?'Parkiet twój':'Koniec tańca'):(acc>=0.7?'Wygrana!':acc>=0.45?'Remis':'Przegrana');
-    $('frT').textContent=ttl; $('frT').style.color=acc>=0.7?'#ffd060':acc>=0.45?'#cfc4ae':'#ff6a6a';
+    const ttl=B.ctx==='studio'?(acc>=nd?'Złoty take':acc>=nd-0.25?'Może być':'Do kosza'):B.ctx==='dance'?(acc>=nd?'Parkiet twój':'Koniec tańca'):(acc>=nd?'Wygrana!':acc>=nd-0.25?'Remis':'Przegrana');
+    $('frT').textContent=ttl; $('frT').style.color=acc>=nd?'#ffd060':acc>=nd-0.25?'#cfc4ae':'#ff6a6a';
     $('frS').innerHTML='Celność <b>'+B.acc+'%</b> · combo <b>'+FS.maxCombo+'</b> · idealne <b>'+FS.perfect+'</b> · złote rymy <b>'+FS.gold+'</b><br>Tłum: <b>'+(B.hype>=80?'szaleje':B.hype>=50?'kiwa głowami':B.hype>=25?'patrzy obojętnie':'gwiżdże')+'</b>';
     $('frB').innerHTML=B.ctx==='dance'?'':(B.best?'<small>Najlepszy wers bitwy</small>„'+B.best+'”':'<small>Najlepszy wers bitwy</small>Żaden wers dziś nie wszedł…');
     $('fsRes').style.display='flex'; $('fs').classList.add('res'); clearTimeout(jT); $('fsJ').style.opacity=0; if(acc>=0.7) cheer(1.3); else if(acc<0.45) crowdBoo(true);
@@ -1998,7 +2006,7 @@ function finishBattle(){ battleOpen=false; $('battle').style.display='none';
     else { const l=Math.min(20,S.cash); S.cash-=l; hud(); sfx('bad'); say('Dres z Zatorza','dres','Słabiutko, raperze. Dycha za rymy i dycha za fatygę. (−'+l+' zł)'); }
     return; }
   S.battleCd=30;
-  if(B.hits>=3){ const win=Math.round((60+Math.min(240,S.resp*2))*(B.hype>=80?1.25:1)); S.cash+=win; S.resp+=6; S.fans+=3+Math.floor(S.resp/15); S.battlesWon++; hud(); sfx('coin'); say('Kosa','kosa','Rozjechałeś '+B.rival+'! Celność '+B.acc+'%, combo '+B.combo+'.'+(B.best?' Ten wers „'+B.best.split(' ').slice(0,6).join(' ')+'…” ludzie jeszcze długo będą powtarzać.':'')+' Ludzie skandowali twoją ksywę. Wygrana: '+win+' zł i +6 szacunku.'); }
+  if(B.hits>=3){ const tp=FS_TIER[B.tier||0].pay, tb=fsTier('kosa'); const win=Math.round((60+Math.min(240,S.resp*2))*(B.hype>=80?1.25:1)*tp); S.cash+=win; S.resp+=Math.round(6*tp); S.fans+=Math.round((3+Math.floor(S.resp/15))*tp); S.battlesWon++; { const ta=fsTier('kosa'); if(ta>tb) setTimeout(()=>gg('kosa','Ziom, awansowałeś! Teraz liga: '+LIGA[ta].n+'. Przyjeżdżają kozaki: '+LIGA[ta].r.join(', ')+'. Szybszy bit, mniej litości. Ale i kasa większa.'),3500); } hud(); sfx('coin'); say('Kosa','kosa','Rozjechałeś '+B.rival+'! Celność '+B.acc+'%, combo '+B.combo+'.'+(B.best?' Ten wers „'+B.best.split(' ').slice(0,6).join(' ')+'…” ludzie jeszcze długo będą powtarzać.':'')+' Ludzie skandowali twoją ksywę. Wygrana: '+win+' zł i +6 szacunku.'); }
   else if(B.hits===2){ S.resp+=1; hud(); say('Kosa','kosa','Remis z '+B.rival+' (celność '+B.acc+'%). Nie było źle, +1 szacunku. Ale wpisowe przepadło.'); }
   else { S.resp=Math.max(0,S.resp-2); hud(); say('Kosa','kosa',B.rival+' cię zjadł. Ćwicz, młody. −2 szacunku.'+(S.buzz>=3?' I odstaw to wino, bo ci się język plącze.':'')); } }
 
