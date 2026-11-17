@@ -285,7 +285,7 @@ body.hud2000 #oClose{background:#d4d0c8;color:#111;border:2px outset #fff;border
   </section>
   <section id="tHow" class="tp">
    <ul class="tHowL">
-    <li><b>Ruch:</b> przeciągaj palcem po lewej stronie ekranu. Na komputerze WASD, Shift to bieg.</li>
+    <li><b>Ruch:</b> stuknij w dowolne miejsce, a postać tam pobiegnie. Możesz też przeciągać palcem w dowolnym miejscu ekranu, a dalsze przeciągnięcie to bieg. Na komputerze klik myszką albo WASD z Shiftem.</li><li><b>Szybka akcja:</b> stuknij w świecące kółko albo w postać, a bohater podejdzie i od razu zagada.</li>
     <li><b>Akcja:</b> przycisk po prawej (albo E), gdy coś świeci pod nogami.</li>
     <li><b>Telefon:</b> ikona Gadki (G). Wiadomości, zadania, mapa, Snake.</li>
     <li><b>Zadania:</b> główne idą po kolei, poboczne wpadają przez Gadkę.</li>
@@ -2039,11 +2039,20 @@ addEventListener('keydown',e=>{ const k=e.key.toLowerCase(); keys[k]=true;
 addEventListener('keyup',e=>keys[e.key.toLowerCase()]=false);
 const joy={id:null,ox:0,oy:0,x:0,y:0};
 const jel=$('joy'), knob=$('knob');
-renderer.domElement.addEventListener('touchstart',e=>{ if(busy()) return; for(const t of e.changedTouches){ if(joy.id===null && t.clientX<innerWidth*0.6){ joy.id=t.identifier; joy.ox=t.clientX; joy.oy=t.clientY; joy.x=joy.y=0;
-  jel.style.display='block'; jel.style.left=(t.clientX-60)+'px'; jel.style.top=(t.clientY-60)+'px'; knob.style.transform=''; } } e.preventDefault(); },{passive:false});
+renderer.domElement.addEventListener('touchstart',e=>{ if(busy()) return; for(const t of e.changedTouches){ if(joy.id===null){ joy.id=t.identifier; joy.ox=t.clientX; joy.oy=t.clientY; joy.x=joy.y=0; joy.t0=performance.now(); joy.far=0; joy.drag=false; } } e.preventDefault(); },{passive:false});
 renderer.domElement.addEventListener('touchmove',e=>{ for(const t of e.changedTouches){ if(t.identifier===joy.id){ let dx=t.clientX-joy.ox, dy=t.clientY-joy.oy; const d=Math.hypot(dx,dy), m=50;
-  if(d>m){dx*=m/d;dy*=m/d;} joy.x=dx/m; joy.y=dy/m; knob.style.transform=`translate(${dx}px,${dy}px)`; } } e.preventDefault(); },{passive:false});
-function tend(e){ for(const t of e.changedTouches){ if(t.identifier===joy.id){ joy.id=null; joy.x=joy.y=0; jel.style.display='none'; } } }
+  if(!joy.drag&&d>14){ joy.drag=true; goTo=null; jel.style.display='block'; jel.style.left=(joy.ox-60)+'px'; jel.style.top=(joy.oy-60)+'px'; }
+  if(!joy.drag) continue; joy.far=d>95; if(d>m){dx*=m/d;dy*=m/d;} joy.x=dx/m; joy.y=dy/m; knob.style.transform=`translate(${dx}px,${dy}px)`; } } e.preventDefault(); },{passive:false});
+let goTo=null; const _ray=new W.Raycaster(), _gp=new W.Plane(new W.Vector3(0,1,0),0), _hit=new W.Vector3();
+const goMark=new W.Mesh(new W.PlaneGeometry(1.2,1.2),new W.MeshBasicMaterial({map:ringTex,color:0xffc65a,transparent:true,opacity:0,blending:W.AdditiveBlending,depthWrite:false})); goMark.rotation.x=-Math.PI/2; goMark.position.y=0.06; scene.add(goMark);
+function tapGo(cx,cy){ if(busy()||!running) return; _ray.setFromCamera({x:cx/innerWidth*2-1,y:-(cy/innerHeight)*2+1},camera); if(!_ray.ray.intersectPlane(_gp,_hit)) return;
+  const P=player.position, far=Math.hypot(_hit.x-P.x,_hit.z-P.z)>9; let act=null, bd=1.8;
+  spots.forEach(sp=>{ if(sp.m.visible===false) return; const d=Math.hypot(sp.x-_hit.x,sp.z-_hit.z); if(d<bd){ bd=d; act={x:sp.x,z:sp.z}; } });
+  npcs.forEach(n=>{ if(!n.g.visible) return; const d=Math.hypot(n.g.position.x-_hit.x,n.g.position.z-_hit.z); if(d<bd){ bd=d; act={x:n.g.position.x,z:n.g.position.z,npc:1}; } });
+  goTo={x:act?act.x:_hit.x,z:act?act.z:_hit.z,act:!!act,npc:act&&act.npc,run:far,t:0,lx:P.x,lz:P.z,stuck:0};
+  goMark.position.x=goTo.x; goMark.position.z=goTo.z; goMark.material.opacity=0.9; goMark.material.color.setHex(act?0x6dff8a:0xffc65a); }
+function tend(e){ for(const t of e.changedTouches){ if(t.identifier===joy.id){ if(!joy.drag&&performance.now()-joy.t0<350) tapGo(t.clientX,t.clientY); joy.id=null; joy.x=joy.y=0; joy.drag=false; joy.far=false; jel.style.display='none'; } } }
+renderer.domElement.addEventListener('click',e=>{ if(e.pointerType==='touch'||(e.sourceCapabilities&&e.sourceCapabilities.firesTouchEvents)) return; tapGo(e.clientX,e.clientY); });
 renderer.domElement.addEventListener('touchend',tend); renderer.domElement.addEventListener('touchcancel',tend);
 let runHeld=false; const rb=$('run');
 rb.addEventListener('pointerdown',e=>{ e.preventDefault(); e.stopPropagation(); runHeld=true; rb.classList.add('on'); });
@@ -2134,11 +2143,17 @@ function loop(now){
   if(running && !busy()){
     if(keys['a']||keys['arrowleft']) mx-=1; if(keys['d']||keys['arrowright']) mx+=1;
     if(keys['w']||keys['arrowup']) mz-=1; if(keys['s']||keys['arrowdown']) mz+=1;
-    if(joy.id!==null){ mx=joy.x; mz=joy.y; }
-    run=(runHeld||keys['shift'])&&S.stamina>0.05&&!S.carry&&S.energy>=15;
+    if(mx||mz) goTo=null;
+    if(joy.id!==null&&joy.drag){ mx=joy.x; mz=joy.y; }
+    else if(goTo){ const gx=goTo.x-player.position.x, gz=goTo.z-player.position.z, gd=Math.hypot(gx,gz), stopD=goTo.act?(goTo.npc?1.4:0.9):0.35;
+      goTo.t+=dt; if(goTo.t>0.5){ goTo.stuck=Math.hypot(player.position.x-goTo.lx,player.position.z-goTo.lz)<0.15?goTo.stuck+1:0; goTo.lx=player.position.x; goTo.lz=player.position.z; goTo.t=0; }
+      if(gd<stopD||goTo.stuck>=2){ const wasAct=goTo.act&&goTo.stuck<2; goTo=null; if(wasAct) setTimeout(()=>{ if(target&&!busy()) doAct(); },60); }
+      else { mx=gx/gd; mz=gz/gd; if(gd<1.2){ mx*=Math.max(0.5,gd/1.2); mz*=Math.max(0.5,gd/1.2); } } }
+    run=(runHeld||keys['shift']||(joy.id!==null&&joy.far)||(goTo&&goTo.run))&&S.stamina>0.05&&!S.carry&&S.energy>=15;
   }
   if(S.buzz>=3&&(mx||mz)){ const wob=Math.sin(now/400)*0.5*(S.buzz-2); const c=Math.cos(wob), s2=Math.sin(wob); const ox=mx; mx=mx*c-mz*s2; mz=ox*s2+mz*c; }
   const mag=Math.min(1,Math.hypot(mx,mz)); let spd=0;
+  if(busy()) goTo=null; goMark.material.opacity=goTo?0.55+Math.sin(now/150)*0.3:Math.max(0,goMark.material.opacity-dt*3);
   const P=player.position;
   if(mag>0.12){
     spd=(run?9.8:6.2)*mag*(S.carry?0.75:1)*(S.energy<25?0.8:1); if(run) S.energy=Math.max(0,S.energy-dt*0.5); const sp=spd*dt, l=Math.hypot(mx,mz), nx=mx/l, nz=mz/l;
