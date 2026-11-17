@@ -173,6 +173,37 @@ body.hud2000 #oClose{background:#d4d0c8;color:#111;border:2px outset #fff;border
 .ql .q{display:flex;gap:8px;align-items:center;padding:7px 4px;border-bottom:1px solid #d4dce8;color:#8a96a8}
 .ql .q span{width:22px;height:22px;border-radius:50%;background:#d4dce8;display:inline-flex;align-items:center;justify-content:center;font-size:12px;flex:none}
 .ql .q.ok{color:#3a6a3a}.ql .q.ok span{background:#5ac85a;color:#fff}.ql .q.cur{color:#1a2a50;font-weight:bold}.ql .q.cur span{background:#2a5aa8;color:#fff}
+#title{overflow-y:auto;justify-content:flex-start;padding:max(24px,6vh) 18px 18px}
+#title .tIn{width:100%;max-width:400px;margin:auto 0;display:flex;flex-direction:column;align-items:center}
+#title .tTop{display:flex;justify-content:space-between;width:100%;font:14px 'VT323',monospace;letter-spacing:3px;color:#8a8070;margin-bottom:8px}
+#title h1{font-size:62px;text-shadow:0 0 30px rgba(255,140,40,.35),3px 3px 0 #2a1408}
+#title .tLine{width:120px;height:3px;background:#ff8a3c;margin:14px 0 6px}
+#title .tp{display:none;width:100%;flex-direction:column;align-items:stretch}
+#title .tp.on{display:flex}
+#title .tDesc{margin:10px auto;text-align:center}
+#title .tDesc b{color:#ffc65a;font-weight:600}
+#title .tFeat{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:6px 0 10px}
+#title .tFeat div{background:rgba(20,16,12,.7);border:1px solid rgba(255,198,90,.18);border-radius:6px;padding:8px;font-size:13px;color:#d8ccb4;text-align:left}
+#title .tFeat i{font-style:normal;margin-right:6px}
+#title .tb{margin-top:10px;width:100%;padding:12px 10px}
+#title .tb.sec{background:#ffc65a}
+#title .tb.ghost{background:rgba(0,0,0,.35);color:#ffc65a;border:1px solid rgba(255,198,90,.5);font-size:22px}
+#title .tRow{display:flex;gap:10px}
+#title #cont{display:none;border:0;color:#1a0d05;font-size:26px}
+#title .tl{align-self:flex-start;margin:14px 0 6px;font:16px 'VT323',monospace;letter-spacing:2px;color:#8a8070;text-transform:uppercase}
+#title input{width:100%;box-sizing:border-box;background:#0d0b09;border:1px solid #5a4a30;border-radius:6px;color:#ffc65a;font:28px 'Bebas Neue';letter-spacing:2px;padding:8px 12px;outline:none}
+#title input:focus{border-color:#ff8a3c}
+#title .tPick{display:flex;flex-direction:column;gap:6px;width:100%}
+#title .tPick button{margin:0;text-align:left;background:rgba(20,16,12,.8);border:1px solid #3a3020;color:#d8ccb4;padding:8px 12px;font-family:'Barlow';font-size:14px;letter-spacing:0;border-radius:6px}
+#title .tPick button b{display:block;font:24px 'Bebas Neue';letter-spacing:2px;color:#ffc65a;font-weight:400}
+#title .tPick button small{color:#a0957f;font-size:13px}
+#title .tPick button.on{border-color:#ff8a3c;background:rgba(255,138,60,.14)}
+#title .tSw{display:flex;gap:10px;flex-wrap:wrap;width:100%}
+#title .tSw button{margin:0;width:42px;height:42px;padding:0;border-radius:50%;border:2px solid rgba(255,255,255,.15)}
+#title .tSw button.on{border:3px solid #ff8a3c;transform:scale(1.08)}
+#title .tHowL{text-align:left;color:#cfc4ae;font-size:15px;line-height:1.5;padding-left:18px;margin:10px 0}
+#title .tHowL b{color:#ffc65a;font-weight:600}
+#title .tFoot{margin-top:16px}
 </style>
 </head>
 <body>
@@ -225,10 +256,46 @@ body.hud2000 #oClose{background:#d4d0c8;color:#111;border:2px outset #fff;border
  <div class="or"><span>Tłum przy bitwach</span><button id="oCrowd"></button></div>
  <button id="oClose">Zamknij</button></div></div>
 <div id="title">
-  <h1 style="font-size:56px">My,<br>ukryty w mieście krzyk</h1>
-  <p>Osiedle, rok 2003. Masz zeszyt z tekstami, 500 zł w kieszeni i jeden cel: pierwszy milion z muzy. Ludzie biorą cię za nikogo. Pokaż im, że się mylą.</p>
-  <button id="start">Nowa gra</button><button id="cont">Kontynuuj</button><button id="optB" class="optB">Opcje</button>
-  <small>prototyp wyglądu · telefon: przeciągaj palcem po lewej stronie · komputer: WASD + Shift (bieg) + E (akcja) + G (Gadka)</small>
+ <div class="tIn">
+  <div class="tTop"><span>OSIEDLE · 2003</span><span>NOC · DESZCZ</span></div>
+  <h1>My,<br>ukryty w mieście krzyk</h1>
+  <div class="tLine"></div>
+  <section id="tMain" class="tp on">
+   <p class="tDesc">Masz zeszyt z tekstami, 500 zł w kieszeni i jeden cel: <b>pierwszy milion z muzy</b>. Zacznij od ławki pod blokiem, skończ na złotej płycie.</p>
+   <div class="tFeat"><div><i>🎤</i>Bitwy freestyle</div><div><i>💿</i>Skrecze na imprezach</div><div><i>📟</i>Gadka i questy</div><div><i>💸</i>Kasa, fani, szacunek</div></div>
+   <button id="cont" class="tb sec">Kontynuuj</button>
+   <button id="tNewB" class="tb">Start kariery</button>
+   <div class="tRow"><button id="tHowB" class="tb ghost">Jak grać</button><button id="optB" class="tb ghost optB">Opcje</button></div>
+  </section>
+  <section id="tNew" class="tp">
+   <label class="tl">Twoja ksywa</label>
+   <input id="tNick" maxlength="14" placeholder="np. Młody Szczur" autocomplete="off">
+   <label class="tl">Kim jesteś na starcie?</label>
+   <div class="tPick" id="tPath">
+    <button data-v="raper" class="on"><b>Raper</b><small>+5 szacunku, Kosa zna twoje teksty</small></button>
+    <button data-v="dj"><b>DJ</b><small>lepszy start w skreczach</small></button>
+    <button data-v="kombinator"><b>Kombinator</b><small>+150 zł na start</small></button>
+   </div>
+   <label class="tl">Bluza</label>
+   <div class="tSw" id="tTop"></div>
+   <label class="tl">Czapka</label>
+   <div class="tSw" id="tCap"></div>
+   <button id="start" class="tb">Wchodzę na osiedle</button>
+   <button class="tb ghost tBack">Wróć</button>
+  </section>
+  <section id="tHow" class="tp">
+   <ul class="tHowL">
+    <li><b>Ruch:</b> przeciągaj palcem po lewej stronie ekranu. Na komputerze WASD, Shift to bieg.</li>
+    <li><b>Akcja:</b> przycisk po prawej (albo E), gdy coś świeci pod nogami.</li>
+    <li><b>Telefon:</b> ikona Gadki (G). Wiadomości, zadania, mapa, Snake.</li>
+    <li><b>Zadania:</b> główne idą po kolei, poboczne wpadają przez Gadkę.</li>
+    <li><b>Energia:</b> śpij w domu. Jedzenie z Nocnego dodaje sił.</li>
+    <li><b>Cel:</b> 1 000 000 zł. Nagrywaj, wydawaj, graj koncerty.</li>
+   </ul>
+   <button class="tb ghost tBack">Wróć</button>
+  </section>
+  <small class="tFoot">v0.9 · prototyp · gra zapisuje się sama</small>
+ </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/three@0.147.0/build/three.min.js"></script>
@@ -1290,9 +1357,11 @@ function clockStr(){ const t=((23*60+mins)%1440+1440)%1440; return String(Math.f
 function useEnergy(v){ S.energy=Math.max(0,Math.min(100,S.energy-v)); hud(); }
 function saveGame(){ try{ const c=Object.assign({},S,{job:null,carry:false,spraying:null}); localStorage.setItem('pm_save',JSON.stringify({S:c,mins,tags:tagSpots.map(t=>t.done),v:1})); return true; }catch(e){ return false; } }
 function loadSave(){ try{ const d=JSON.parse(localStorage.getItem('pm_save')||'null'); return d&&d.S?d:null; }catch(e){ return null; } }
+function hideCap(){ player.userData.head.children.forEach(m=>{ if(m.material===player.userData.mats.cap||(m.geometry&&m.geometry.type==='PlaneGeometry')) m.visible=false; }); }
 function applySave(d){ Object.assign(S,d.S); S.job=null; S.carry=false; S.spraying=null; mins=d.mins||0;
   (d.tags||[]).forEach((on,i)=>{ if(on&&tagSpots[i]){ paintTag(tagSpots[i]); tagSpots[i].done=true; } });
   if(S.moniaMet) GG.contacts.find(c=>c.id==='monia').hidden=false; if(S.labelOffer) GG.contacts.find(c=>c.id==='beton').hidden=false;
+  if(S.noCap) hideCap();
   if(S.outfit) setOutfit(S.outfit.top!=null?S.outfit.top:null,S.outfit.cap!=null?S.outfit.cap:null);
   $('clock').textContent=clockStr(); hud(); }
 function sleepScreen(title,sub,cb){ const el=$('sleep'); $('slT').textContent=title; $('slS').textContent=sub; el.style.display='flex';
@@ -2207,10 +2276,23 @@ $('winBtn').addEventListener('click',e=>{ e.stopPropagation(); $('win').style.di
 (function(){ const d=loadSave(); if(d){ const b=$('cont'); b.style.display='inline-block'; b.textContent='Kontynuuj (dzień '+(d.S.day||1)+')';
   b.onclick=()=>{ $('title').style.display='none'; running=true; try{ AC=new (window.AudioContext||window.webkitAudioContext)(); }catch(e){ AC=null; } applySave(d); player.position.set(0,0,-12.6); player.rotation.y=Math.PI;
     setTimeout(()=>say('Ty','ty','Dzień '+S.day+'. Znowu noc na osiedlu. Kasa: '+Math.round(S.cash).toLocaleString('pl-PL')+' zł. Do miliona jeszcze kawałek.'),400); }; } })();
-$('start').onclick=()=>{ $('title').style.display='none'; running=true;
-  try{ AC=new (window.AudioContext||window.webkitAudioContext)(); }catch(e){ AC=null; }
-  setTimeout(()=>say('Ty','ty','Kolejna noc na osiedlu. W zeszycie pełno tekstów, w kieszeni 500 zł. Czas coś z tym zrobić. Rozglądaj się, na ziemi zawsze coś leży.'),400);
-  setTimeout(()=>gg('kosa','wbijaj na ławke kolo trzepaka, jest sprawa','k1'),7000); };
+(function(){ const T=$('title'); const show=id=>T.querySelectorAll('.tp').forEach(p=>p.classList.toggle('on',p.id===id));
+  $('tNewB').onclick=()=>show('tNew'); $('tHowB').onclick=()=>show('tHow'); T.querySelectorAll('.tBack').forEach(b=>b.onclick=()=>show('tMain'));
+  const TOPS=[0x1f2f5a,0x8a1f2f,0x1a1a1a,0x2f5a3a,0xb0b0a8,0x6a3a8a], CAPS=[0xf2f2f2,0x1a1a1a,0x8a1f2f,0x2a3a8a,-1]; let pTop=TOPS[0],pCap=CAPS[0],pPath='raper';
+  const sw=(el,list,cb)=>{ list.forEach((c,k)=>{ const b=document.createElement('button'); b.style.background=c<0?'repeating-linear-gradient(45deg,#222 0 6px,#444 6px 12px)':'#'+c.toString(16).padStart(6,'0'); if(c<0) b.title='bez czapki'; if(!k) b.classList.add('on');
+    b.onclick=()=>{ el.querySelectorAll('button').forEach(x=>x.classList.remove('on')); b.classList.add('on'); cb(c); }; el.appendChild(b); }); };
+  sw($('tTop'),TOPS,c=>{ pTop=c; setOutfit(c,null); }); sw($('tCap'),CAPS,c=>{ pCap=c; if(c>=0) setOutfit(null,c); });
+  $('tPath').querySelectorAll('button').forEach(b=>b.onclick=()=>{ $('tPath').querySelectorAll('button').forEach(x=>x.classList.remove('on')); b.classList.add('on'); pPath=b.dataset.v; });
+  $('start').onclick=()=>{ const nick=($('tNick').value||'').trim()||'Młody';
+    S.nick=nick; S.path=pPath; if(pPath==='raper') S.resp+=5; if(pPath==='dj') S.djSkill=(S.djSkill||0)+1; if(pPath==='kombinator') S.cash+=150;
+    setOutfit(pTop,pCap>=0?pCap:null); if(pCap<0){ S.noCap=true; hideCap(); }
+    T.style.display='none'; running=true; hud();
+    try{ AC=new (window.AudioContext||window.webkitAudioContext)(); }catch(e){ AC=null; }
+    const intro={raper:'W zeszycie pełno tekstów',dj:'W plecaku dwie płyty i słuchawki',kombinator:'Kieszenie pełne drobnych interesów'}[pPath];
+    setTimeout(()=>say('Ty','ty','Mówią na mnie '+nick+'. '+intro+', w kieszeni '+Math.round(S.cash)+' zł. Kolejna noc na osiedlu. Czas coś z tym zrobić. Rozglądaj się, na ziemi zawsze coś leży.'),400);
+    setTimeout(()=>gg('kosa',pPath==='raper'?'Siema '+nick+'! Słyszałem twoje teksty. Wbijaj na ławkę koło trzepaka, jest sprawa':'wbijaj na ławke kolo trzepaka '+nick+', jest sprawa','k1'),7000); };
+  const d=loadSave(); if(d&&d.S&&d.S.nick) $('cont').textContent='Kontynuuj: '+d.S.nick+' · dzień '+(d.S.day||1);
+})();
 addEventListener('resize',()=>{ FS.laneH=0; camera.aspect=innerWidth/innerHeight; camera.updateProjectionMatrix(); renderer.setSize(innerWidth,innerHeight); if(composer) composer.setSize(innerWidth,innerHeight);
   camOff.set(0, innerWidth<innerHeight?24:19, innerWidth<innerHeight?19:16); });
 if(innerWidth<innerHeight) camOff.set(0,24,19);
